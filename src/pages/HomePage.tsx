@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { NavigationBar } from "../components/NavigationBar";
 import { PageHeader } from "../components/PageHeader";
 import { SurahList } from "../components/SurahList";
 import { fetchSurahs } from "../services/quranApi";
@@ -36,8 +35,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen pattern-bg pb-20 md:pb-0">
-      <NavigationBar />
-      
       <main className="container mx-auto px-4 pt-8 pb-20">
         <section className="mb-16 text-center animate-fade-in">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif mb-4">
