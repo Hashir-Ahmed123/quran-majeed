@@ -6,6 +6,8 @@ const TRANSLATIONS = [
   { id: "en.sahih", name: "Sahih International", language: "English" },
   { id: "en.pickthall", name: "Pickthall", language: "English" },
   { id: "en.yusufali", name: "Yusuf Ali", language: "English" },
+  { id: "ur.jalandhry", name: "Jalandhry", language: "Urdu" },
+  { id: "ur.ahmedali", name: "Ahmed Ali", language: "Urdu" },
   { id: "fr.hamidullah", name: "Hamidullah", language: "French" },
   { id: "es.cortes", name: "Cortes", language: "Spanish" },
   { id: "de.aburida", name: "Abu Rida", language: "German" }
