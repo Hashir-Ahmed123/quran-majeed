@@ -82,9 +82,8 @@ export function NavigationBar() {
           })}
           
           {/* Theme Toggle for Mobile */}
-          <div className="flex flex-col items-center justify-center">
+          <div className="flex items-center justify-center">
             <ThemeToggle />
-            <span className="mt-1 text-xs font-medium">Theme</span>
           </div>
         </div>
       </nav>
