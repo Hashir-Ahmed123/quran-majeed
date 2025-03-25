@@ -7,12 +7,14 @@ import { LoadingSpinner } from "../components/LoadingSpinner";
 import { SearchBar } from "../components/SearchBar";
 import { fetchSurahs } from "../services/quranApi";
 import { Surah } from "../types";
+import { useNavigate } from "react-router-dom";
 
 export default function SurahsPage() {
   const [surahs, setSurahs] = useState<Surah[]>([]);
   const [filteredSurahs, setFilteredSurahs] = useState<Surah[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadSurahs = async () => {
@@ -49,6 +51,16 @@ export default function SurahsPage() {
     setFilteredSurahs(filtered);
   };
 
+  const handleSelectSuggestion = (id: number | string) => {
+    navigate(`/surah/${id}`);
+  };
+
+  const searchSuggestions = surahs.map(surah => ({
+    id: surah.number,
+    text: surah.englishName,
+    subtext: `${surah.englishNameTranslation} - ${surah.numberOfAyahs} verses`
+  }));
+
   return (
     <div className="min-h-screen pattern-bg pb-20 md:pb-0">
       <NavigationBar />
@@ -60,7 +72,12 @@ export default function SurahsPage() {
         />
         
         <div className="mb-8 max-w-2xl">
-          <SearchBar onSearch={handleSearch} placeholder="Search surahs by name or number..." />
+          <SearchBar 
+            onSearch={handleSearch} 
+            placeholder="Search surahs by name or number..." 
+            suggestions={searchSuggestions}
+            onSelectSuggestion={handleSelectSuggestion}
+          />
         </div>
         
         {isLoading ? (
