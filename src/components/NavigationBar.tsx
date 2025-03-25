@@ -2,9 +2,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { Book, Bookmark, Home, Search } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function NavigationBar() {
   const location = useLocation();
+  const isMobile = useIsMobile();
   
   const links = [
     { path: "/", label: "Home", icon: Home },
@@ -50,13 +52,13 @@ export function NavigationBar() {
         </nav>
         
         <div className="flex items-center gap-4">
-          <ThemeToggle />
+          {!isMobile && <ThemeToggle />}
         </div>
       </div>
       
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t z-40">
-        <div className="flex items-center justify-around h-16">
+        <div className="grid grid-cols-5 items-center h-16">
           {links.map((link) => {
             const isActive = location.pathname === link.path;
             const LinkIcon = link.icon;
@@ -78,6 +80,12 @@ export function NavigationBar() {
               </Link>
             );
           })}
+          
+          {/* Theme Toggle for Mobile */}
+          <div className="flex flex-col items-center justify-center">
+            <ThemeToggle />
+            <span className="mt-1 text-xs font-medium">Theme</span>
+          </div>
         </div>
       </nav>
     </header>
