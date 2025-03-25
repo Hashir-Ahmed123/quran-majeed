@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Globe } from "lucide-react";
 
 const TRANSLATIONS = [
   { id: "en.sahih", name: "Sahih International", language: "English" },
@@ -22,6 +22,14 @@ export function TranslationSelector({ onSelect, selected }: TranslationSelectorP
   const [isOpen, setIsOpen] = useState(false);
   const selectedTranslation = TRANSLATIONS.find(t => t.id === selected) || TRANSLATIONS[0];
   
+  // Function to get the appropriate icon for each language
+  const getLanguageIcon = (language: string) => {
+    if (language === "Urdu") {
+      return <span className="text-green-600 font-arabic text-xs">پاک</span>;
+    }
+    return <Globe className="h-3.5 w-3.5" />;
+  };
+  
   return (
     <div className="relative">
       <button
@@ -31,7 +39,12 @@ export function TranslationSelector({ onSelect, selected }: TranslationSelectorP
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        <span>{selectedTranslation.name}</span>
+        <div className="flex items-center">
+          <span className="mr-2">
+            {getLanguageIcon(selectedTranslation.language)}
+          </span>
+          <span>{selectedTranslation.name}</span>
+        </div>
         <ChevronDown className="h-4 w-4 ml-2" />
       </button>
       
@@ -52,9 +65,14 @@ export function TranslationSelector({ onSelect, selected }: TranslationSelectorP
                   ${selected === translation.id ? "bg-accent/10 text-accent" : "hover:bg-muted/50"}
                 `}
               >
-                <div className="flex flex-col">
-                  <span className="font-medium">{translation.name}</span>
-                  <span className="text-xs text-foreground/60">{translation.language}</span>
+                <div className="flex items-center">
+                  <span className="mr-2">
+                    {getLanguageIcon(translation.language)}
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{translation.name}</span>
+                    <span className="text-xs text-foreground/60">{translation.language}</span>
+                  </div>
                 </div>
               </li>
             ))}
