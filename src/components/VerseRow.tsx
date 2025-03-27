@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { BookmarkPlus, BookmarkCheck, Play } from "lucide-react";
+import { BookmarkPlus, BookmarkCheck, Play, Volume2 } from "lucide-react";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { Verse } from "../types";
 
@@ -46,7 +46,7 @@ export function VerseRow({ verse, surahNumber, onPlayAudio }: VerseRowProps) {
             className="p-1.5 rounded-full hover:bg-accent/10 text-accent/80 hover:text-accent transition-colors"
             aria-label="Play verse audio"
           >
-            <Play size={18} />
+            <Volume2 size={18} />
           </button>
           
           <button

@@ -99,17 +99,11 @@ export async function searchVerses(query: string, limit: number = 20): Promise<V
 
 /**
  * Get audio URL for a specific verse
- * Using the everyayah.com API which is more reliable for individual verse audio
+ * Using the MP3Quran.net API which is more reliable for individual verse audio
  */
 export function getVerseAudioUrl(surahNumber: number, verseNumber: number): string {
-  // Format surah number with leading zeros (e.g., 001, 002, etc.)
-  const formattedSurah = surahNumber.toString().padStart(3, '0');
-  
-  // Format verse number with leading zeros (e.g., 001, 002, etc.)
-  const formattedVerse = verseNumber.toString().padStart(3, '0');
-  
-  // Use everyayah.com API with Mishary Rashid Alafasy recitation
-  return `https://everyayah.com/data/Alafasy_128kbps/${formattedSurah}${formattedVerse}.mp3`;
+  // Try MP3Quran.net with Mishary Rashid Alafasy recitation
+  return `https://www.mp3quran.net/api/aya?arabic=quran-uthmani&surah=${surahNumber}&aya=${verseNumber}&recitation=Alafasy`;
 }
 
 /**
