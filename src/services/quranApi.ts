@@ -99,16 +99,24 @@ export async function searchVerses(query: string, limit: number = 20): Promise<V
 
 /**
  * Get audio URL for a specific verse
+ * Using the everyayah.com API which is more reliable for individual verse audio
  */
 export function getVerseAudioUrl(surahNumber: number, verseNumber: number): string {
-  // Using Alafasy recitation from islamic.network which is more reliable
-  return `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${(surahNumber - 1) * 10 + verseNumber}.mp3`;
+  // Format surah number with leading zeros (e.g., 001, 002, etc.)
+  const formattedSurah = surahNumber.toString().padStart(3, '0');
+  
+  // Format verse number with leading zeros (e.g., 001, 002, etc.)
+  const formattedVerse = verseNumber.toString().padStart(3, '0');
+  
+  // Use everyayah.com API with Mishary Rashid Alafasy recitation
+  return `https://everyayah.com/data/Alafasy_128kbps/${formattedSurah}${formattedVerse}.mp3`;
 }
 
 /**
  * Get audio URL for a complete Surah
  */
 export function getSurahAudioUrl(surahNumber: number): string {
-  // Using Mishary Rashid Alafasy recitation
-  return `https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/${surahNumber.toString().padStart(3, '0')}.mp3`;
+  // Using Mishary Rashid Alafasy recitation from quranicaudio.com
+  const formattedSurah = surahNumber.toString().padStart(3, '0');
+  return `https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/${formattedSurah}.mp3`;
 }

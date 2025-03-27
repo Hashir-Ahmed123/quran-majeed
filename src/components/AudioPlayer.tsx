@@ -1,6 +1,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Play, Pause, SkipForward, SkipBack, Volume2, X } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 interface AudioPlayerProps {
   audioSrc: string;
@@ -24,7 +25,8 @@ export function AudioPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playRequestRef = useRef<Promise<void> | null>(null);
 
@@ -47,6 +49,7 @@ export function AudioPlayer({
     setIsPlaying(false);
     setCurrentTime(0);
     setIsLoading(true);
+    setLoadError(false);
     
     if (audioRef.current) {
       audioRef.current.pause();
@@ -64,6 +67,7 @@ export function AudioPlayer({
     if (!audioRef.current) return;
     
     setIsLoading(true);
+    setLoadError(false);
     
     try {
       // Store the play promise to track its completion
@@ -76,6 +80,12 @@ export function AudioPlayer({
       // Only log if it's not an AbortError (which happens normally when pausing during play attempt)
       if (!(err instanceof DOMException && err.name === "AbortError")) {
         console.error("Error playing audio:", err);
+        setLoadError(true);
+        toast({
+          title: "Audio Error",
+          description: "Could not play the audio. Please try again.",
+          variant: "destructive",
+        });
       }
       setIsPlaying(false);
       if (onPlayStateChange) onPlayStateChange(false);
@@ -113,7 +123,20 @@ export function AudioPlayer({
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
       setIsLoading(false);
+      setLoadError(false);
     }
+  };
+
+  const handleLoadError = () => {
+    console.error("Failed to load audio from URL:", audioSrc);
+    setIsLoading(false);
+    setLoadError(true);
+    
+    toast({
+      title: "Audio Error",
+      description: "Failed to load the audio. Please try another verse or surah.",
+      variant: "destructive",
+    });
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,6 +182,7 @@ export function AudioPlayer({
         src={audioSrc}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
+        onError={handleLoadError}
         onEnded={() => {
           setIsPlaying(false);
           if (onPlayStateChange) onPlayStateChange(false);
@@ -198,6 +222,7 @@ export function AudioPlayer({
           value={currentTime}
           onChange={handleSeek}
           className="w-full h-1 bg-accent/20 rounded-lg appearance-none cursor-pointer accent-accent"
+          disabled={isLoading || loadError}
         />
       </div>
       
@@ -206,16 +231,16 @@ export function AudioPlayer({
           onClick={skipBackward}
           className="p-2 rounded-full hover:bg-accent/10 transition-colors"
           aria-label="Skip backward 10 seconds"
-          disabled={isLoading}
+          disabled={isLoading || loadError}
         >
           <SkipBack size={18} />
         </button>
         
         <button 
           onClick={togglePlayPause}
-          className={`p-3 ${isLoading ? 'bg-accent/50' : 'bg-accent'} text-white rounded-full hover:bg-accent/90 transition-colors`}
+          className={`p-3 ${isLoading ? 'bg-accent/50' : loadError ? 'bg-destructive/50' : 'bg-accent'} text-white rounded-full hover:bg-accent/90 transition-colors`}
           aria-label={isPlaying ? "Pause" : "Play"}
-          disabled={isLoading}
+          disabled={isLoading || loadError}
         >
           {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
         </button>
@@ -224,11 +249,17 @@ export function AudioPlayer({
           onClick={skipForward}
           className="p-2 rounded-full hover:bg-accent/10 transition-colors"
           aria-label="Skip forward 10 seconds"
-          disabled={isLoading}
+          disabled={isLoading || loadError}
         >
           <SkipForward size={18} />
         </button>
       </div>
+      
+      {loadError && (
+        <div className="text-destructive text-xs text-center mt-2">
+          Unable to load audio. Please try another verse.
+        </div>
+      )}
     </div>
   );
 }
