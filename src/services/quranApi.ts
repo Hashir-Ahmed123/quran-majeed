@@ -101,7 +101,8 @@ export async function searchVerses(query: string, limit: number = 20): Promise<V
  * Get audio URL for a specific verse
  */
 export function getVerseAudioUrl(surahNumber: number, verseNumber: number): string {
-  return `https://verses.quran.com/${surahNumber}/${verseNumber}`;
+  // Using Alafasy recitation from islamic.network which is more reliable
+  return `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${(surahNumber - 1) * 10 + verseNumber}.mp3`;
 }
 
 /**

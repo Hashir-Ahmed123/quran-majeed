@@ -24,7 +24,9 @@ export function AudioPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playRequestRef = useRef<Promise<void> | null>(null);
 
   // Handle external play state control
   useEffect(() => {
@@ -32,7 +34,7 @@ export function AudioPlayer({
       setIsPlaying(externalIsPlaying);
       if (audioRef.current) {
         if (externalIsPlaying) {
-          audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+          handlePlay();
         } else {
           audioRef.current.pause();
         }
@@ -44,6 +46,7 @@ export function AudioPlayer({
     // Reset audio player when source changes
     setIsPlaying(false);
     setCurrentTime(0);
+    setIsLoading(true);
     
     if (audioRef.current) {
       audioRef.current.pause();
@@ -57,20 +60,45 @@ export function AudioPlayer({
     }
   }, [audioSrc, onPlayStateChange]);
 
+  const handlePlay = async () => {
+    if (!audioRef.current) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // Store the play promise to track its completion
+      playRequestRef.current = audioRef.current.play();
+      await playRequestRef.current;
+      // Play succeeded
+      setIsPlaying(true);
+      if (onPlayStateChange) onPlayStateChange(true);
+    } catch (err) {
+      // Only log if it's not an AbortError (which happens normally when pausing during play attempt)
+      if (!(err instanceof DOMException && err.name === "AbortError")) {
+        console.error("Error playing audio:", err);
+      }
+      setIsPlaying(false);
+      if (onPlayStateChange) onPlayStateChange(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePause = () => {
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    setIsPlaying(false);
+    if (onPlayStateChange) onPlayStateChange(false);
+  };
+
   const togglePlayPause = () => {
+    if (isLoading) return; // Prevent multiple requests during loading
+    
     if (audioRef.current) {
       if (isPlaying) {
-        audioRef.current.pause();
+        handlePause();
       } else {
-        audioRef.current.play().catch(e => console.error("Error playing audio:", e));
-      }
-      
-      const newPlayState = !isPlaying;
-      setIsPlaying(newPlayState);
-      
-      // Notify parent component
-      if (onPlayStateChange) {
-        onPlayStateChange(newPlayState);
+        handlePlay();
       }
     }
   };
@@ -84,6 +112,7 @@ export function AudioPlayer({
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
+      setIsLoading(false);
     }
   };
 
@@ -117,6 +146,7 @@ export function AudioPlayer({
 
   const handleClose = () => {
     if (onClose) {
+      handlePause();
       onClose();
     }
   };
@@ -133,6 +163,7 @@ export function AudioPlayer({
           setIsPlaying(false);
           if (onPlayStateChange) onPlayStateChange(false);
         }}
+        preload="auto"
       />
       
       <div className="flex items-center justify-between mb-2">
@@ -175,14 +206,16 @@ export function AudioPlayer({
           onClick={skipBackward}
           className="p-2 rounded-full hover:bg-accent/10 transition-colors"
           aria-label="Skip backward 10 seconds"
+          disabled={isLoading}
         >
           <SkipBack size={18} />
         </button>
         
         <button 
           onClick={togglePlayPause}
-          className="p-3 bg-accent text-white rounded-full hover:bg-accent/90 transition-colors"
+          className={`p-3 ${isLoading ? 'bg-accent/50' : 'bg-accent'} text-white rounded-full hover:bg-accent/90 transition-colors`}
           aria-label={isPlaying ? "Pause" : "Play"}
+          disabled={isLoading}
         >
           {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
         </button>
@@ -191,6 +224,7 @@ export function AudioPlayer({
           onClick={skipForward}
           className="p-2 rounded-full hover:bg-accent/10 transition-colors"
           aria-label="Skip forward 10 seconds"
+          disabled={isLoading}
         >
           <SkipForward size={18} />
         </button>
