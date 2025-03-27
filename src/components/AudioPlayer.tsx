@@ -1,18 +1,44 @@
 
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, SkipForward, SkipBack, Volume2 } from "lucide-react";
+import { Play, Pause, SkipForward, SkipBack, Volume2, X } from "lucide-react";
 
 interface AudioPlayerProps {
   audioSrc: string;
   chapter: number;
   name: string;
+  isPlaying?: boolean;
+  onPlayStateChange?: (isPlaying: boolean) => void;
+  onClose?: () => void;
+  isFixed?: boolean;
 }
 
-export function AudioPlayer({ audioSrc, chapter, name }: AudioPlayerProps) {
+export function AudioPlayer({ 
+  audioSrc, 
+  chapter, 
+  name, 
+  isPlaying: externalIsPlaying, 
+  onPlayStateChange,
+  onClose,
+  isFixed = false
+}: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Handle external play state control
+  useEffect(() => {
+    if (externalIsPlaying !== undefined && externalIsPlaying !== isPlaying) {
+      setIsPlaying(externalIsPlaying);
+      if (audioRef.current) {
+        if (externalIsPlaying) {
+          audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+        } else {
+          audioRef.current.pause();
+        }
+      }
+    }
+  }, [externalIsPlaying, isPlaying]);
 
   useEffect(() => {
     // Reset audio player when source changes
@@ -24,7 +50,12 @@ export function AudioPlayer({ audioSrc, chapter, name }: AudioPlayerProps) {
       audioRef.current.currentTime = 0;
       audioRef.current.load();
     }
-  }, [audioSrc]);
+    
+    // Notify parent component
+    if (onPlayStateChange) {
+      onPlayStateChange(false);
+    }
+  }, [audioSrc, onPlayStateChange]);
 
   const togglePlayPause = () => {
     if (audioRef.current) {
@@ -33,7 +64,14 @@ export function AudioPlayer({ audioSrc, chapter, name }: AudioPlayerProps) {
       } else {
         audioRef.current.play().catch(e => console.error("Error playing audio:", e));
       }
-      setIsPlaying(!isPlaying);
+      
+      const newPlayState = !isPlaying;
+      setIsPlaying(newPlayState);
+      
+      // Notify parent component
+      if (onPlayStateChange) {
+        onPlayStateChange(newPlayState);
+      }
     }
   };
 
@@ -77,14 +115,24 @@ export function AudioPlayer({ audioSrc, chapter, name }: AudioPlayerProps) {
     }
   };
 
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="glass-card rounded-lg p-4 w-full max-w-xl mx-auto shadow-elegant animate-fade-in">
+    <div className={`glass-card rounded-lg p-4 w-full max-w-xl shadow-elegant animate-fade-in 
+      ${isFixed ? 'fixed bottom-4 left-0 right-0 mx-auto z-50 max-w-md' : 'mx-auto'}`}>
       <audio
         ref={audioRef}
         src={audioSrc}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
-        onEnded={() => setIsPlaying(false)}
+        onEnded={() => {
+          setIsPlaying(false);
+          if (onPlayStateChange) onPlayStateChange(false);
+        }}
       />
       
       <div className="flex items-center justify-between mb-2">
@@ -95,8 +143,19 @@ export function AudioPlayer({ audioSrc, chapter, name }: AudioPlayerProps) {
             <p className="text-xs text-foreground/60">Surah {chapter}</p>
           </div>
         </div>
-        <div className="text-xs text-foreground/60">
-          {formatTime(currentTime)} / {formatTime(duration)}
+        <div className="flex items-center">
+          <div className="text-xs text-foreground/60 mr-2">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </div>
+          {isFixed && (
+            <button 
+              onClick={handleClose}
+              className="p-1 rounded-full hover:bg-accent/10 transition-colors"
+              aria-label="Close player"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
       

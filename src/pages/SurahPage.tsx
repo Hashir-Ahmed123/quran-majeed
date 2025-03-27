@@ -8,12 +8,13 @@ import { VerseRow } from "../components/VerseRow";
 import { AudioPlayer } from "../components/AudioPlayer";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { TranslationSelector } from "../components/TranslationSelector";
+import { ScrollArea } from "../components/ui/scroll-area";
 import { 
   fetchSurahDetails, 
   getVerseAudioUrl, 
   getSurahAudioUrl 
 } from "../services/quranApi";
-import { SurahDetails } from "../types";
+import { SurahDetails, Verse } from "../types";
 
 export default function SurahPage() {
   const { surahNumber } = useParams<{ surahNumber: string }>();
@@ -27,7 +28,15 @@ export default function SurahPage() {
   const [surahAudioUrl, setSurahAudioUrl] = useState("");
   const [currentVerseAudio, setCurrentVerseAudio] = useState("");
   
+  // Audio player state
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [showFixedPlayer, setShowFixedPlayer] = useState(false);
+  const [currentVerse, setCurrentVerse] = useState<number | null>(null);
+  const [activeWordIndex, setActiveWordIndex] = useState<number>(-1);
+  
   const verseRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const wordRefs = useRef<(HTMLSpanElement | null)[][]>([]);
+  const contentRef = useRef<HTMLDivElement>(null);
   
   const surahId = parseInt(surahNumber || "1");
   
@@ -45,6 +54,14 @@ export default function SurahPage() {
         
         // Set the surah audio URL
         setSurahAudioUrl(getSurahAudioUrl(parseInt(surahNumber)));
+        
+        // Initialize wordRefs with arrays for each verse
+        wordRefs.current = new Array(data.ayahs.length);
+        for (let i = 0; i < data.ayahs.length; i++) {
+          // Approximately split Arabic text into words (this is simplified)
+          const wordCount = data.ayahs[i].text.split(' ').length;
+          wordRefs.current[i] = new Array(wordCount);
+        }
         
       } catch (err) {
         console.error("Failed to load surah:", err);
@@ -79,6 +96,46 @@ export default function SurahPage() {
     }
   }, [highlightedVerse, surah, isLoading]);
   
+  // Handle word highlighting during audio playback
+  useEffect(() => {
+    if (!isAudioPlaying || currentVerse === null) {
+      // Reset highlighting when not playing
+      setActiveWordIndex(-1);
+      return;
+    }
+    
+    // Simulated word timing - in a real implementation, this would use timestamps
+    const wordTimingInterval = 750; // milliseconds per word
+    
+    if (currentVerse > 0 && surah) {
+      const verseIndex = currentVerse - 1;
+      const words = surah.ayahs[verseIndex]?.text.split(' ') || [];
+      
+      // Set up word highlighting interval
+      const interval = setInterval(() => {
+        setActiveWordIndex(prev => {
+          const nextIndex = prev + 1;
+          if (nextIndex >= words.length) {
+            clearInterval(interval);
+            return -1;
+          }
+          
+          // Scroll the active word into view
+          if (wordRefs.current[verseIndex] && wordRefs.current[verseIndex][nextIndex]) {
+            wordRefs.current[verseIndex][nextIndex]?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            });
+          }
+          
+          return nextIndex;
+        });
+      }, wordTimingInterval);
+      
+      return () => clearInterval(interval);
+    }
+  }, [isAudioPlaying, currentVerse, surah]);
+  
   const handleTranslationChange = (translationId: string) => {
     setTranslation(translationId);
   };
@@ -86,6 +143,58 @@ export default function SurahPage() {
   const handlePlayVerseAudio = (verseNumber: number) => {
     const audioUrl = getVerseAudioUrl(surahId, verseNumber);
     setCurrentVerseAudio(audioUrl);
+    setCurrentVerse(verseNumber);
+    setShowFixedPlayer(true);
+    setIsAudioPlaying(true);
+    
+    // Scroll to the verse being played
+    if (verseRefs.current[verseNumber - 1]) {
+      verseRefs.current[verseNumber - 1]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+  
+  const handlePlaybackStateChange = (isPlaying: boolean) => {
+    setIsAudioPlaying(isPlaying);
+    if (isPlaying) {
+      setShowFixedPlayer(true);
+    }
+  };
+  
+  const handleClosePlayer = () => {
+    setShowFixedPlayer(false);
+    setIsAudioPlaying(false);
+    setCurrentVerse(null);
+    setActiveWordIndex(-1);
+  };
+  
+  const renderVerseText = (verse: Verse, verseIndex: number) => {
+    if (!verse.text) return null;
+    
+    const words = verse.text.split(' ');
+    return (
+      <div className="arabic-text text-2xl mb-4 leading-loose">
+        {words.map((word, wordIndex) => (
+          <span
+            key={`word-${verseIndex}-${wordIndex}`}
+            ref={el => {
+              if (wordRefs.current[verseIndex]) {
+                wordRefs.current[verseIndex][wordIndex] = el;
+              }
+            }}
+            className={`inline-block mx-1 ${
+              currentVerse === verse.number && activeWordIndex === wordIndex
+                ? 'border-b-2 border-accent text-accent animate-pulse'
+                : ''
+            }`}
+          >
+            {word}
+          </span>
+        ))}
+      </div>
+    );
   };
   
   return (
@@ -141,30 +250,69 @@ export default function SurahPage() {
               </div>
             </div>
             
-            {/* Audio player section */}
-            <div className="mb-8">
-              <AudioPlayer 
-                audioSrc={currentVerseAudio || surahAudioUrl}
-                chapter={surah.number}
-                name={surah.englishName}
-              />
-            </div>
+            {/* Audio player section (non-fixed) */}
+            {!showFixedPlayer && (
+              <div className="mb-8">
+                <AudioPlayer 
+                  audioSrc={currentVerseAudio || surahAudioUrl}
+                  chapter={surah.number}
+                  name={surah.englishName}
+                  onPlayStateChange={handlePlaybackStateChange}
+                />
+              </div>
+            )}
             
             {/* Verses section */}
-            <div className="bg-white dark:bg-black/20 rounded-xl shadow-elegant">
+            <div className="bg-white dark:bg-black/20 rounded-xl shadow-elegant" ref={contentRef}>
               {surah.ayahs.map((verse, index) => (
                 <div 
                   key={verse.number} 
                   ref={el => (verseRefs.current[index] = el)}
+                  className={`verse-container py-6 px-4 border-b last:border-b-0 ${
+                    currentVerse === verse.number ? 'bg-accent/5' : ''
+                  }`}
                 >
-                  <VerseRow 
-                    verse={verse} 
-                    surahNumber={surah.number} 
-                    onPlayAudio={handlePlayVerseAudio}
-                  />
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-shrink-0 bg-accent/10 h-8 w-8 flex items-center justify-center rounded-full mr-3">
+                      <span className="text-sm font-medium text-accent">{verse.number}</span>
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => handlePlayVerseAudio(verse.number)}
+                        className="p-1.5 rounded-full hover:bg-accent/10 text-accent/80 hover:text-accent transition-colors"
+                        aria-label="Play verse audio"
+                      >
+                        <Volume2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {renderVerseText(verse, index)}
+                  
+                  <div className="text-foreground/80 text-base leading-relaxed">
+                    {verse.translation.text}
+                  </div>
                 </div>
               ))}
             </div>
+            
+            {/* Fixed Audio Player at bottom */}
+            {showFixedPlayer && (
+              <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
+                <div className="pointer-events-auto">
+                  <AudioPlayer 
+                    audioSrc={currentVerseAudio || surahAudioUrl}
+                    chapter={surah.number}
+                    name={currentVerse ? `Verse ${currentVerse}` : surah.englishName}
+                    isPlaying={isAudioPlaying}
+                    onPlayStateChange={handlePlaybackStateChange}
+                    onClose={handleClosePlayer}
+                    isFixed={true}
+                  />
+                </div>
+              </div>
+            )}
           </>
         ) : null}
       </main>
