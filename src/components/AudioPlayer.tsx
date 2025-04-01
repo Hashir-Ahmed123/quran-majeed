@@ -188,7 +188,6 @@ export function AudioPlayer({
           if (onPlayStateChange) onPlayStateChange(false);
         }}
         preload="auto"
-        crossOrigin="anonymous"
       />
       
       <div className="flex items-center justify-between mb-2">
