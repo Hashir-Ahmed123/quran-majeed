@@ -1,8 +1,10 @@
 
 import { useState } from "react";
-import { BookmarkPlus, BookmarkCheck } from "lucide-react";
+import { BookmarkPlus, BookmarkCheck, Play } from "lucide-react";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { Verse } from "../types";
+import { getVerseAudioUrl } from "../services/quranApi";
+import { AudioPlayer } from "./AudioPlayer";
 
 interface VerseRowProps {
   verse: Verse;
@@ -13,6 +15,7 @@ export function VerseRow({ verse, surahNumber }: VerseRowProps) {
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
   const isVerseBookmarked = isBookmarked(surahNumber, verse.number);
   const [isHovered, setIsHovered] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   
   const toggleBookmark = () => {
     if (isVerseBookmarked) {
@@ -28,6 +31,8 @@ export function VerseRow({ verse, surahNumber }: VerseRowProps) {
     }
   };
 
+  const audioUrl = getVerseAudioUrl(surahNumber, verse.number);
+
   return (
     <div 
       className="verse-container py-6 px-4 border-b last:border-b-0"
@@ -40,6 +45,14 @@ export function VerseRow({ verse, surahNumber }: VerseRowProps) {
         </div>
         
         <div className={`flex space-x-2 ${isHovered ? 'opacity-100' : 'opacity-0'} transition-opacity`}>
+          <button
+            onClick={() => setIsPlaying(true)}
+            className="p-1.5 rounded-full text-foreground/40 hover:text-foreground/80 transition-colors"
+            aria-label="Play verse audio"
+          >
+            <Play size={18} />
+          </button>
+          
           <button
             onClick={toggleBookmark}
             className={`p-1.5 rounded-full transition-colors ${
@@ -61,6 +74,19 @@ export function VerseRow({ verse, surahNumber }: VerseRowProps) {
       <div className="text-foreground/80 text-base leading-relaxed">
         {verse.translation.text}
       </div>
+      
+      {isPlaying && (
+        <div className="mt-4">
+          <AudioPlayer 
+            audioSrc={audioUrl}
+            chapter={surahNumber}
+            name={`Verse ${verse.number}`}
+            isPlaying={true}
+            onPlayStateChange={(playing) => setIsPlaying(playing)}
+            onClose={() => setIsPlaying(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }
