@@ -1,16 +1,15 @@
 
 import { useState } from "react";
-import { BookmarkPlus, BookmarkCheck, Play } from "lucide-react";
+import { BookmarkPlus, BookmarkCheck } from "lucide-react";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { Verse } from "../types";
 
 interface VerseRowProps {
   verse: Verse;
   surahNumber: number;
-  onPlayAudio: (verseNumber: number) => void;
 }
 
-export function VerseRow({ verse, surahNumber, onPlayAudio }: VerseRowProps) {
+export function VerseRow({ verse, surahNumber }: VerseRowProps) {
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
   const isVerseBookmarked = isBookmarked(surahNumber, verse.number);
   const [isHovered, setIsHovered] = useState(false);
@@ -41,14 +40,6 @@ export function VerseRow({ verse, surahNumber, onPlayAudio }: VerseRowProps) {
         </div>
         
         <div className={`flex space-x-2 ${isHovered ? 'opacity-100' : 'opacity-0'} transition-opacity`}>
-          <button 
-            onClick={() => onPlayAudio(verse.number)}
-            className="p-1.5 rounded-full hover:bg-accent/10 text-accent/80 hover:text-accent transition-colors"
-            aria-label="Play verse audio"
-          >
-            <Play size={18} />
-          </button>
-          
           <button
             onClick={toggleBookmark}
             className={`p-1.5 rounded-full transition-colors ${
