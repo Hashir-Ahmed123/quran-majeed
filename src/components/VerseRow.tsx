@@ -63,7 +63,7 @@ export function VerseRow({ verse, surahNumber, onPlayAudio }: VerseRowProps) {
         </div>
       </div>
       
-      <div className="arabic-text text-2xl mb-4 leading-loose text-right">
+      <div dir="rtl" className="arabic-text text-2xl mb-4 leading-loose">
         {verse.text}
       </div>
       

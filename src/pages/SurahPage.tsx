@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, BookOpen, Volume2 } from "lucide-react";
@@ -28,7 +27,6 @@ export default function SurahPage() {
   const [surahAudioUrl, setSurahAudioUrl] = useState("");
   const [currentVerseAudio, setCurrentVerseAudio] = useState("");
   
-  // Audio player state
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [showFixedPlayer, setShowFixedPlayer] = useState(false);
   const [currentVerse, setCurrentVerse] = useState<number | null>(null);
@@ -48,21 +46,16 @@ export default function SurahPage() {
         setIsLoading(true);
         setError(null);
         
-        // Load surah details with selected translation
         const data = await fetchSurahDetails(parseInt(surahNumber), translation);
         setSurah(data);
         
-        // Set the surah audio URL
         setSurahAudioUrl(getSurahAudioUrl(parseInt(surahNumber)));
         
-        // Initialize wordRefs with arrays for each verse
         wordRefs.current = new Array(data.ayahs.length);
         for (let i = 0; i < data.ayahs.length; i++) {
-          // Approximately split Arabic text into words (this is simplified)
           const wordCount = data.ayahs[i].text.split(' ').length;
           wordRefs.current[i] = new Array(wordCount);
         }
-        
       } catch (err) {
         console.error("Failed to load surah:", err);
         setError("Failed to load surah. Please try again later.");
@@ -74,7 +67,6 @@ export default function SurahPage() {
     loadSurah();
   }, [surahNumber, translation]);
   
-  // Scroll to highlighted verse if specified in URL
   useEffect(() => {
     if (highlightedVerse && surah && !isLoading) {
       const verseIndex = parseInt(highlightedVerse) - 1;
@@ -86,7 +78,6 @@ export default function SurahPage() {
             block: 'center' 
           });
           
-          // Highlight the verse
           verseRefs.current[verseIndex]?.classList.add('bg-accent/5');
           setTimeout(() => {
             verseRefs.current[verseIndex]?.classList.remove('bg-accent/5');
@@ -96,22 +87,18 @@ export default function SurahPage() {
     }
   }, [highlightedVerse, surah, isLoading]);
   
-  // Handle word highlighting during audio playback
   useEffect(() => {
     if (!isAudioPlaying || currentVerse === null) {
-      // Reset highlighting when not playing
       setActiveWordIndex(-1);
       return;
     }
     
-    // Simulated word timing - in a real implementation, this would use timestamps
-    const wordTimingInterval = 750; // milliseconds per word
+    const wordTimingInterval = 750;
     
     if (currentVerse > 0 && surah) {
       const verseIndex = currentVerse - 1;
       const words = surah.ayahs[verseIndex]?.text.split(' ') || [];
       
-      // Set up word highlighting interval
       const interval = setInterval(() => {
         setActiveWordIndex(prev => {
           const nextIndex = prev + 1;
@@ -120,7 +107,6 @@ export default function SurahPage() {
             return -1;
           }
           
-          // Scroll the active word into view
           if (wordRefs.current[verseIndex] && wordRefs.current[verseIndex][nextIndex]) {
             wordRefs.current[verseIndex][nextIndex]?.scrollIntoView({
               behavior: 'smooth',
@@ -147,7 +133,6 @@ export default function SurahPage() {
     setShowFixedPlayer(true);
     setIsAudioPlaying(true);
     
-    // Scroll to the verse being played
     if (verseRefs.current[verseNumber - 1]) {
       verseRefs.current[verseNumber - 1]?.scrollIntoView({
         behavior: 'smooth',
@@ -175,7 +160,7 @@ export default function SurahPage() {
     
     const words = verse.text.split(' ');
     return (
-      <div className="arabic-text text-2xl mb-4 leading-loose">
+      <div dir="rtl" className="arabic-text text-2xl mb-4 leading-loose">
         {words.map((word, wordIndex) => (
           <span
             key={`word-${verseIndex}-${wordIndex}`}
@@ -250,7 +235,6 @@ export default function SurahPage() {
               </div>
             </div>
             
-            {/* Audio player section (non-fixed) */}
             {!showFixedPlayer && (
               <div className="mb-8">
                 <AudioPlayer 
@@ -262,7 +246,6 @@ export default function SurahPage() {
               </div>
             )}
             
-            {/* Verses section */}
             <div className="bg-white dark:bg-black/20 rounded-xl shadow-elegant" ref={contentRef}>
               {surah.ayahs.map((verse, index) => (
                 <div 
@@ -297,7 +280,6 @@ export default function SurahPage() {
               ))}
             </div>
             
-            {/* Fixed Audio Player at bottom */}
             {showFixedPlayer && (
               <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
                 <div className="pointer-events-auto">
