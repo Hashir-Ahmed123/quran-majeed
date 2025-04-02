@@ -22,6 +22,7 @@ export default function SurahPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [translation, setTranslation] = useState("en.sahih");
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   
   const verseRefs = useRef<(HTMLDivElement | null)[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -72,6 +73,10 @@ export default function SurahPage() {
   
   const handleTranslationChange = (translationId: string) => {
     setTranslation(translationId);
+  };
+  
+  const handleAudioPlayStateChange = (isPlaying: boolean) => {
+    setIsAudioPlaying(isPlaying);
   };
   
   return (
@@ -133,7 +138,8 @@ export default function SurahPage() {
                 audioSrc={surahAudioUrl}
                 chapter={surah.number}
                 name={`Complete Surah - ${surah.englishName}`}
-                isPlaying={false}
+                isPlaying={isAudioPlaying}
+                onPlayStateChange={handleAudioPlayStateChange}
                 isFixed={false}
               />
             </div>
