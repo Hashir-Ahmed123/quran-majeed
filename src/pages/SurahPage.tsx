@@ -12,6 +12,7 @@ import { fetchSurahDetails } from "../services/quranApi";
 import { getSurahAudioUrl } from "../services/quranApi";
 import { SurahDetails } from "../types";
 import { AudioPlayer } from "../components/AudioPlayer";
+import { toast } from "@/components/ui/use-toast";
 
 export default function SurahPage() {
   const { surahNumber } = useParams<{ surahNumber: string }>();
@@ -26,6 +27,7 @@ export default function SurahPage() {
   
   const verseRefs = useRef<(HTMLDivElement | null)[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const surahId = parseInt(surahNumber || "1");
   const surahAudioUrl = getSurahAudioUrl(surahId);
@@ -50,6 +52,11 @@ export default function SurahPage() {
     
     loadSurah();
   }, [surahNumber, translation]);
+  
+  // Reset audio playing state when changing surahs
+  useEffect(() => {
+    setIsAudioPlaying(false);
+  }, [surahNumber]);
   
   useEffect(() => {
     if (highlightedVerse && surah && !isLoading) {
@@ -77,6 +84,18 @@ export default function SurahPage() {
   
   const handleAudioPlayStateChange = (isPlaying: boolean) => {
     setIsAudioPlaying(isPlaying);
+    
+    if (isPlaying) {
+      toast({
+        title: "Audio started",
+        description: surah ? `Playing Surah ${surah.englishName}` : "Playing audio",
+        duration: 3000,
+      });
+    }
+  };
+  
+  const handlePlayClick = () => {
+    setIsAudioPlaying(true);
   };
   
   return (
