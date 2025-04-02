@@ -1,7 +1,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Volume2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavigationBar } from "../components/NavigationBar";
 import { VerseRow } from "../components/VerseRow";
@@ -13,6 +13,7 @@ import { getSurahAudioUrl } from "../services/quranApi";
 import { SurahDetails } from "../types";
 import { AudioPlayer } from "../components/AudioPlayer";
 import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export default function SurahPage() {
   const { surahNumber } = useParams<{ surahNumber: string }>();
@@ -24,6 +25,7 @@ export default function SurahPage() {
   const [error, setError] = useState<string | null>(null);
   const [translation, setTranslation] = useState("en.sahih");
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
   
   const verseRefs = useRef<(HTMLDivElement | null)[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -56,6 +58,7 @@ export default function SurahPage() {
   // Reset audio playing state when changing surahs
   useEffect(() => {
     setIsAudioPlaying(false);
+    setAudioError(null);
   }, [surahNumber]);
   
   useEffect(() => {
@@ -96,6 +99,18 @@ export default function SurahPage() {
   
   const handlePlayClick = () => {
     setIsAudioPlaying(true);
+  };
+  
+  const handleAudioError = (errorMsg: string) => {
+    setAudioError(errorMsg);
+    setIsAudioPlaying(false);
+    
+    toast({
+      title: "Audio Error",
+      description: errorMsg || "Could not play the audio. Please try again.",
+      variant: "destructive",
+      duration: 5000,
+    });
   };
   
   return (
@@ -153,12 +168,33 @@ export default function SurahPage() {
             
             {/* Full Surah Audio Player */}
             <div className="mb-6">
+              {audioError ? (
+                <Alert variant="destructive" className="mb-4">
+                  <Volume2 className="h-4 w-4" />
+                  <AlertTitle>Audio Error</AlertTitle>
+                  <AlertDescription>
+                    {audioError}
+                    <button 
+                      onClick={() => {
+                        setAudioError(null);
+                        setIsAudioPlaying(false);
+                        setTimeout(() => setIsAudioPlaying(true), 500);
+                      }}
+                      className="ml-2 underline hover:no-underline"
+                    >
+                      Try Again
+                    </button>
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+              
               <AudioPlayer
                 audioSrc={surahAudioUrl}
                 chapter={surah.number}
                 name={`Complete Surah - ${surah.englishName}`}
                 isPlaying={isAudioPlaying}
                 onPlayStateChange={handleAudioPlayStateChange}
+                onError={handleAudioError}
                 isFixed={false}
               />
             </div>

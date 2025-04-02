@@ -10,6 +10,7 @@ interface AudioPlayerProps {
   isPlaying?: boolean;
   onPlayStateChange?: (isPlaying: boolean) => void;
   onClose?: () => void;
+  onError?: (errorMessage: string) => void;
   isFixed?: boolean;
 }
 
@@ -20,6 +21,7 @@ export function AudioPlayer({
   isPlaying: externalIsPlaying, 
   onPlayStateChange,
   onClose,
+  onError,
   isFixed = false
 }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -81,11 +83,17 @@ export function AudioPlayer({
       if (!(err instanceof DOMException && err.name === "AbortError")) {
         console.error("Error playing audio:", err);
         setLoadError(true);
-        toast({
-          title: "Audio Error",
-          description: "Could not play the audio. Please try again.",
-          variant: "destructive",
-        });
+        
+        const errorMsg = "Could not play the audio. Please check your internet connection or try another verse.";
+        if (onError) {
+          onError(errorMsg);
+        } else {
+          toast({
+            title: "Audio Error",
+            description: errorMsg,
+            variant: "destructive",
+          });
+        }
       }
       setIsPlaying(false);
       if (onPlayStateChange) onPlayStateChange(false);
@@ -132,11 +140,17 @@ export function AudioPlayer({
     setIsLoading(false);
     setLoadError(true);
     
-    toast({
-      title: "Audio Error",
-      description: "Failed to load the audio. Please try another verse or surah.",
-      variant: "destructive",
-    });
+    const errorMsg = "Failed to load the audio file. The audio source might be unavailable.";
+    
+    if (onError) {
+      onError(errorMsg);
+    } else {
+      toast({
+        title: "Audio Error",
+        description: errorMsg,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,6 +202,8 @@ export function AudioPlayer({
           if (onPlayStateChange) onPlayStateChange(false);
         }}
         preload="auto"
+        // Add crossOrigin attribute to allow cross-origin audio loading
+        crossOrigin="anonymous"
       />
       
       <div className="flex items-center justify-between mb-2">
@@ -255,7 +271,7 @@ export function AudioPlayer({
         </button>
       </div>
       
-      {loadError && (
+      {loadError && !onError && (
         <div className="text-destructive text-xs text-center mt-2">
           Unable to load audio. Please try another verse.
         </div>
