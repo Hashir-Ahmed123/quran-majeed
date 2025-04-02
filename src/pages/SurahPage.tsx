@@ -9,7 +9,9 @@ import { LoadingSpinner } from "../components/LoadingSpinner";
 import { TranslationSelector } from "../components/TranslationSelector";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { fetchSurahDetails } from "../services/quranApi";
+import { getSurahAudioUrl } from "../services/quranApi";
 import { SurahDetails } from "../types";
+import { AudioPlayer } from "../components/AudioPlayer";
 
 export default function SurahPage() {
   const { surahNumber } = useParams<{ surahNumber: string }>();
@@ -25,6 +27,7 @@ export default function SurahPage() {
   const contentRef = useRef<HTMLDivElement>(null);
   
   const surahId = parseInt(surahNumber || "1");
+  const surahAudioUrl = getSurahAudioUrl(surahId);
   
   useEffect(() => {
     const loadSurah = async () => {
@@ -122,6 +125,17 @@ export default function SurahPage() {
                   />
                 </div>
               </div>
+            </div>
+            
+            {/* Full Surah Audio Player */}
+            <div className="mb-6">
+              <AudioPlayer
+                audioSrc={surahAudioUrl}
+                chapter={surah.number}
+                name={`Complete Surah - ${surah.englishName}`}
+                isPlaying={false}
+                isFixed={false}
+              />
             </div>
             
             <div className="bg-white dark:bg-black/20 rounded-xl shadow-elegant" ref={contentRef}>
