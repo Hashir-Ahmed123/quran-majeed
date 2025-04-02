@@ -30,7 +30,7 @@ export function AudioPlayer({
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const playRequestRef = useRef<Promise<void> | null>(null);
+  const [audioInitialized, setAudioInitialized] = useState(false);
 
   // Handle external play state control
   useEffect(() => {
@@ -38,13 +38,36 @@ export function AudioPlayer({
       setIsPlaying(externalIsPlaying);
       if (audioRef.current) {
         if (externalIsPlaying) {
-          handlePlay();
+          const playPromise = audioRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.error("Audio play error:", error);
+              setIsPlaying(false);
+              if (onPlayStateChange) onPlayStateChange(false);
+              
+              // Handle permission errors specifically
+              if (error.name === 'NotAllowedError') {
+                const errorMsg = "Browser requires user interaction before playing audio. Please try clicking play again.";
+                if (onError) {
+                  onError(errorMsg);
+                } else {
+                  toast({
+                    title: "Audio Error",
+                    description: errorMsg,
+                    variant: "destructive",
+                  });
+                }
+              } else {
+                handleLoadError();
+              }
+            });
+          }
         } else {
           audioRef.current.pause();
         }
       }
     }
-  }, [externalIsPlaying, isPlaying]);
+  }, [externalIsPlaying, isPlaying, onPlayStateChange, onError]);
 
   useEffect(() => {
     // Reset audio player when source changes
@@ -52,6 +75,7 @@ export function AudioPlayer({
     setCurrentTime(0);
     setIsLoading(true);
     setLoadError(false);
+    setAudioInitialized(false);
     
     if (audioRef.current) {
       audioRef.current.pause();
@@ -63,7 +87,34 @@ export function AudioPlayer({
     if (onPlayStateChange) {
       onPlayStateChange(false);
     }
+    
+    // Initialize audio object
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    };
   }, [audioSrc, onPlayStateChange]);
+
+  // Initialize audio after component mount
+  useEffect(() => {
+    const initializeAudio = () => {
+      if (audioRef.current && !audioInitialized) {
+        audioRef.current.load();
+        setAudioInitialized(true);
+        console.log("Audio initialized with source:", audioSrc);
+      }
+    };
+    
+    initializeAudio();
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, [audioSrc, audioInitialized]);
 
   const handlePlay = async () => {
     if (!audioRef.current) return;
@@ -72,30 +123,38 @@ export function AudioPlayer({
     setLoadError(false);
     
     try {
-      // Store the play promise to track its completion
-      playRequestRef.current = audioRef.current.play();
-      await playRequestRef.current;
-      // Play succeeded
+      console.log("Attempting to play audio:", audioSrc);
+      await audioRef.current.play();
       setIsPlaying(true);
       if (onPlayStateChange) onPlayStateChange(true);
+      console.log("Audio playing successfully");
     } catch (err) {
-      // Only log if it's not an AbortError (which happens normally when pausing during play attempt)
-      if (!(err instanceof DOMException && err.name === "AbortError")) {
-        console.error("Error playing audio:", err);
-        setLoadError(true);
-        
-        const errorMsg = "Could not play the audio. Please check your internet connection or try another verse.";
-        if (onError) {
-          onError(errorMsg);
-        } else {
-          toast({
-            title: "Audio Error",
-            description: errorMsg,
-            variant: "destructive",
-          });
+      console.error("Error playing audio:", err);
+      setLoadError(true);
+      setIsPlaying(false);
+      
+      let errorMsg = "Could not play the audio. Please check your internet connection or try another verse.";
+      
+      // Handle specific error cases
+      if (err instanceof Error) {
+        if (err.name === "NotAllowedError") {
+          errorMsg = "Your browser requires user interaction before playing audio. Please try clicking play again.";
+        } else if (err.name === "AbortError") {
+          // This is normal when stopping playback, ignore
+          return;
         }
       }
-      setIsPlaying(false);
+      
+      if (onError) {
+        onError(errorMsg);
+      } else {
+        toast({
+          title: "Audio Error",
+          description: errorMsg,
+          variant: "destructive",
+        });
+      }
+      
       if (onPlayStateChange) onPlayStateChange(false);
     } finally {
       setIsLoading(false);
@@ -132,6 +191,7 @@ export function AudioPlayer({
       setDuration(audioRef.current.duration);
       setIsLoading(false);
       setLoadError(false);
+      console.log("Audio metadata loaded, duration:", audioRef.current.duration);
     }
   };
 
@@ -140,7 +200,7 @@ export function AudioPlayer({
     setIsLoading(false);
     setLoadError(true);
     
-    const errorMsg = "Failed to load the audio file. The audio source might be unavailable.";
+    const errorMsg = "Failed to load the audio file. The audio source might be unavailable or blocked by CORS restrictions.";
     
     if (onError) {
       onError(errorMsg);
@@ -188,6 +248,11 @@ export function AudioPlayer({
     }
   };
 
+  const handleCanPlayThrough = () => {
+    console.log("Audio can play through without buffering");
+    setIsLoading(false);
+  };
+
   return (
     <div className={`glass-card rounded-lg p-4 w-full max-w-xl shadow-elegant animate-fade-in 
       ${isFixed ? 'fixed bottom-4 left-0 right-0 mx-auto z-50 max-w-md' : 'mx-auto'}`}>
@@ -197,12 +262,13 @@ export function AudioPlayer({
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onError={handleLoadError}
+        onCanPlayThrough={handleCanPlayThrough}
         onEnded={() => {
+          console.log("Audio playback ended");
           setIsPlaying(false);
           if (onPlayStateChange) onPlayStateChange(false);
         }}
         preload="auto"
-        // Add crossOrigin attribute to allow cross-origin audio loading
         crossOrigin="anonymous"
       />
       

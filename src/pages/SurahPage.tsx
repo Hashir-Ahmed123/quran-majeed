@@ -26,6 +26,7 @@ export default function SurahPage() {
   const [translation, setTranslation] = useState("en.sahih");
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
+  const [audioKey, setAudioKey] = useState(Date.now()); // Add a key to force remount
   
   const verseRefs = useRef<(HTMLDivElement | null)[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -59,8 +60,11 @@ export default function SurahPage() {
   useEffect(() => {
     setIsAudioPlaying(false);
     setAudioError(null);
+    // Reset audio key to force remounting of audio player
+    setAudioKey(Date.now());
   }, [surahNumber]);
   
+  // Handle highlighted verse scrolling
   useEffect(() => {
     if (highlightedVerse && surah && !isLoading) {
       const verseIndex = parseInt(highlightedVerse) - 1;
@@ -86,6 +90,7 @@ export default function SurahPage() {
   };
   
   const handleAudioPlayStateChange = (isPlaying: boolean) => {
+    console.log("Audio play state changed:", isPlaying);
     setIsAudioPlaying(isPlaying);
     
     if (isPlaying) {
@@ -98,12 +103,18 @@ export default function SurahPage() {
   };
   
   const handlePlayClick = () => {
+    console.log("Play button clicked, setting isAudioPlaying to true");
+    setAudioError(null);
     setIsAudioPlaying(true);
   };
   
   const handleAudioError = (errorMsg: string) => {
+    console.error("Audio error received:", errorMsg);
     setAudioError(errorMsg);
     setIsAudioPlaying(false);
+    
+    // Reset audio key to force remounting the player
+    setAudioKey(Date.now());
     
     toast({
       title: "Audio Error",
@@ -111,6 +122,18 @@ export default function SurahPage() {
       variant: "destructive",
       duration: 5000,
     });
+  };
+  
+  const handleTryAgain = () => {
+    console.log("Trying audio playback again");
+    setAudioError(null);
+    setIsAudioPlaying(false);
+    
+    // Reset audio key to force remounting the player
+    setAudioKey(Date.now());
+    
+    // Delay slightly before attempting to play
+    setTimeout(() => setIsAudioPlaying(true), 500);
   };
   
   return (
@@ -175,11 +198,7 @@ export default function SurahPage() {
                   <AlertDescription>
                     {audioError}
                     <button 
-                      onClick={() => {
-                        setAudioError(null);
-                        setIsAudioPlaying(false);
-                        setTimeout(() => setIsAudioPlaying(true), 500);
-                      }}
+                      onClick={handleTryAgain}
                       className="ml-2 underline hover:no-underline"
                     >
                       Try Again
@@ -189,6 +208,7 @@ export default function SurahPage() {
               ) : null}
               
               <AudioPlayer
+                key={audioKey} // Force remount when key changes
                 audioSrc={surahAudioUrl}
                 chapter={surah.number}
                 name={`Complete Surah - ${surah.englishName}`}
