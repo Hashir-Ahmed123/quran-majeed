@@ -1,7 +1,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Volume2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavigationBar } from "../components/NavigationBar";
 import { VerseRow } from "../components/VerseRow";
@@ -9,10 +9,7 @@ import { LoadingSpinner } from "../components/LoadingSpinner";
 import { TranslationSelector } from "../components/TranslationSelector";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { fetchSurahDetails } from "../services/quranApi";
-import { getSurahAudioUrl } from "../services/quranApi";
 import { SurahDetails } from "../types";
-import { AudioPlayer } from "../components/AudioPlayer";
-import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export default function SurahPage() {
@@ -24,16 +21,11 @@ export default function SurahPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [translation, setTranslation] = useState("en.sahih");
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [audioError, setAudioError] = useState<string | null>(null);
-  const [audioKey, setAudioKey] = useState(Date.now()); // Add a key to force remount
   
   const verseRefs = useRef<(HTMLDivElement | null)[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const surahId = parseInt(surahNumber || "1");
-  const surahAudioUrl = getSurahAudioUrl(surahId);
   
   useEffect(() => {
     const loadSurah = async () => {
@@ -55,14 +47,6 @@ export default function SurahPage() {
     
     loadSurah();
   }, [surahNumber, translation]);
-  
-  // Reset audio playing state when changing surahs
-  useEffect(() => {
-    setIsAudioPlaying(false);
-    setAudioError(null);
-    // Reset audio key to force remounting of audio player
-    setAudioKey(Date.now());
-  }, [surahNumber]);
   
   // Handle highlighted verse scrolling
   useEffect(() => {
@@ -87,53 +71,6 @@ export default function SurahPage() {
   
   const handleTranslationChange = (translationId: string) => {
     setTranslation(translationId);
-  };
-  
-  const handleAudioPlayStateChange = (isPlaying: boolean) => {
-    console.log("Audio play state changed:", isPlaying);
-    setIsAudioPlaying(isPlaying);
-    
-    if (isPlaying) {
-      toast({
-        title: "Audio started",
-        description: surah ? `Playing Surah ${surah.englishName}` : "Playing audio",
-        duration: 3000,
-      });
-    }
-  };
-  
-  const handlePlayClick = () => {
-    console.log("Play button clicked, setting isAudioPlaying to true");
-    setAudioError(null);
-    setIsAudioPlaying(true);
-  };
-  
-  const handleAudioError = (errorMsg: string) => {
-    console.error("Audio error received:", errorMsg);
-    setAudioError(errorMsg);
-    setIsAudioPlaying(false);
-    
-    // Reset audio key to force remounting the player
-    setAudioKey(Date.now());
-    
-    toast({
-      title: "Audio Error",
-      description: errorMsg || "Could not play the audio. Please try again.",
-      variant: "destructive",
-      duration: 5000,
-    });
-  };
-  
-  const handleTryAgain = () => {
-    console.log("Trying audio playback again");
-    setAudioError(null);
-    setIsAudioPlaying(false);
-    
-    // Reset audio key to force remounting the player
-    setAudioKey(Date.now());
-    
-    // Delay slightly before attempting to play
-    setTimeout(() => setIsAudioPlaying(true), 500);
   };
   
   return (
@@ -187,36 +124,6 @@ export default function SurahPage() {
                   />
                 </div>
               </div>
-            </div>
-            
-            {/* Full Surah Audio Player */}
-            <div className="mb-6">
-              {audioError ? (
-                <Alert variant="destructive" className="mb-4">
-                  <Volume2 className="h-4 w-4" />
-                  <AlertTitle>Audio Error</AlertTitle>
-                  <AlertDescription>
-                    {audioError}
-                    <button 
-                      onClick={handleTryAgain}
-                      className="ml-2 underline hover:no-underline"
-                    >
-                      Try Again
-                    </button>
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-              
-              <AudioPlayer
-                key={audioKey} // Force remount when key changes
-                audioSrc={surahAudioUrl}
-                chapter={surah.number}
-                name={`Complete Surah - ${surah.englishName}`}
-                isPlaying={isAudioPlaying}
-                onPlayStateChange={handleAudioPlayStateChange}
-                onError={handleAudioError}
-                isFixed={false}
-              />
             </div>
             
             <div className="bg-white dark:bg-black/20 rounded-xl shadow-elegant" ref={contentRef}>
