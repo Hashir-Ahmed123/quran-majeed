@@ -37,5 +37,7 @@ This project is built with .
 - React
 - shadcn-ui
 - Tailwind CSS
+
 ##vist the web##
+
 https://pure-book-quran.netlify.app/
