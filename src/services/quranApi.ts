@@ -69,6 +69,41 @@ export async function fetchSurahDetails(surahNumber: number, translation: string
 }
 
 /**
+ * Fetches all ayahs for a Juz (Parah) with translation
+ */
+export async function fetchJuzDetails(juzNumber: number, translation: string = 'en.sahih') {
+  try {
+    const [arabicRes, transRes] = await Promise.all([
+      fetch(`${API_BASE_URL}/juz/${juzNumber}/quran-uthmani`),
+      fetch(`${API_BASE_URL}/juz/${juzNumber}/${translation}`),
+    ]);
+    const arabicData = await arabicRes.json();
+    const transData = await transRes.json();
+
+    if (arabicData.status === 'OK' && transData.status === 'OK') {
+      const ayahs: any[] = arabicData.data.ayahs.map((ayah: any, index: number) => ({
+        ...ayah,
+        translation: {
+          text: transData.data.ayahs[index]?.text || '',
+          edition: {
+            language: transData.data.edition.language,
+            name: transData.data.edition.name,
+          },
+        },
+      }));
+      return {
+        number: arabicData.data.number,
+        ayahs,
+      };
+    }
+    throw new Error('Failed to fetch juz');
+  } catch (error) {
+    console.error(`Error fetching juz ${juzNumber}:`, error);
+    throw error;
+  }
+}
+
+/**
  * Search for verses by keyword
  */
 export async function searchVerses(query: string, limit: number = 20): Promise<Verse[]> {
