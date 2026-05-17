@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import IndexPage from "./pages/Index";
 import SurahsPage from "./pages/SurahsPage";
 import SurahPage from "./pages/SurahPage";
+import JuzPage from "./pages/JuzPage";
 import SearchPage from "./pages/SearchPage";
 import BookmarksPage from "./pages/BookmarksPage";
 import NotFound from "./pages/NotFound";
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/" element={<IndexPage />} />
           <Route path="/surahs" element={<SurahsPage />} />
           <Route path="/surah/:surahNumber" element={<SurahPage />} />
+          <Route path="/juz/:juzNumber" element={<JuzPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
           <Route path="*" element={<NotFound />} />
