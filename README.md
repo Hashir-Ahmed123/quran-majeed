@@ -38,6 +38,6 @@ This project is built with .
 - shadcn-ui
 - Tailwind CSS
 
-## vist the web
+## Visit the Website
 
 https://pure-book-quran.netlify.app/
