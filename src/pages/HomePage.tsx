@@ -1,17 +1,18 @@
 
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { PageHeader } from "../components/PageHeader";
 import { SurahList } from "../components/SurahList";
 import { fetchSurahs } from "../services/quranApi";
 import { Surah } from "../types";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { useLastRead } from "../hooks/useLastRead";
 
 export default function HomePage() {
   const [featuredSurahs, setFeaturedSurahs] = useState<Surah[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { lastRead, clearLastRead } = useLastRead();
 
   useEffect(() => {
     const loadFeaturedSurahs = async () => {
@@ -62,6 +63,38 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
+
+        {lastRead && (
+          <section className="mb-12 animate-fade-in">
+            <div className="max-w-2xl mx-auto bg-white dark:bg-black/20 border rounded-xl shadow-elegant p-5 flex items-center gap-4">
+              <div className="bg-accent/10 h-12 w-12 flex items-center justify-center rounded-full flex-shrink-0">
+                <BookOpen className="text-accent" size={22} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-foreground/60 uppercase tracking-wide">Continue reading</p>
+                <p className="font-medium truncate">
+                  {lastRead.surahName} · Ayah {lastRead.verseNumber}
+                </p>
+              </div>
+              <Link
+                to={`/surah/${lastRead.surahNumber}?verse=${lastRead.verseNumber}`}
+                className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors inline-flex items-center gap-1"
+              >
+                Resume
+                <ArrowRight size={14} />
+              </Link>
+              <button
+                onClick={clearLastRead}
+                className="p-1.5 rounded-full text-foreground/40 hover:text-foreground/80 hover:bg-foreground/5 transition-colors"
+                aria-label="Clear continue reading"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </section>
+        )}
+
+
         
         <section>
           <div className="flex flex-col items-center text-center mb-8 gap-2">
