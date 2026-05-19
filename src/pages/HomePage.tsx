@@ -64,7 +64,7 @@ export default function HomePage() {
         </section>
         
         <section>
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col items-center text-center mb-8 gap-2">
             <h2 className="text-2xl font-serif">Featured Surahs</h2>
             <Link
               to="/surahs"
