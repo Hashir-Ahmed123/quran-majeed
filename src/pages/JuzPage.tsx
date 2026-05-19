@@ -72,8 +72,8 @@ export default function JuzPage() {
                 <ArrowLeft size={16} className="mr-1" />
                 Back
               </Link>
-              <div className="flex flex-col md:flex-row md:items-end justify-between">
-                <div>
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="flex flex-col items-center">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="bg-accent/10 h-10 w-10 flex items-center justify-center rounded-full">
                       <span className="text-accent font-medium">{juzId}</span>
@@ -84,7 +84,7 @@ export default function JuzPage() {
                   <p className="text-foreground/60 mb-2">Starts: {juzInfo?.startSurah}</p>
                   <div dir="rtl" className="arabic-text text-2xl mt-2">{juzInfo?.arabicName}</div>
                 </div>
-                <div className="mt-4 md:mt-0">
+                <div>
                   <TranslationSelector selected={translation} onSelect={setTranslation} />
                 </div>
               </div>

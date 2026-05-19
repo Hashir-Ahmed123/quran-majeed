@@ -101,8 +101,8 @@ export default function SurahPage() {
                 Back to Surahs
               </Link>
               
-              <div className="flex flex-col md:flex-row md:items-end justify-between">
-                <div>
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="flex flex-col items-center">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="bg-accent/10 h-10 w-10 flex items-center justify-center rounded-full">
                       <span className="text-accent font-medium">{surah.number}</span>
@@ -111,16 +111,16 @@ export default function SurahPage() {
                       {surah.revelationType} • {surah.numberOfAyahs} verses
                     </span>
                   </div>
-                  
+
                   <h1 className="text-3xl md:text-4xl font-serif mb-1">{surah.englishName}</h1>
                   <p className="text-foreground/60 mb-2">{surah.englishNameTranslation}</p>
-                  <div className="arabic-text text-2xl mt-2">{surah.name}</div>
+                  <div dir="rtl" className="arabic-text text-2xl mt-2">{surah.name}</div>
                 </div>
-                
-                <div className="mt-4 md:mt-0">
-                  <TranslationSelector 
-                    selected={translation} 
-                    onSelect={handleTranslationChange} 
+
+                <div>
+                  <TranslationSelector
+                    selected={translation}
+                    onSelect={handleTranslationChange}
                   />
                 </div>
               </div>
