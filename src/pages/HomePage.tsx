@@ -1,12 +1,12 @@
 
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { PageHeader } from "../components/PageHeader";
 import { SurahList } from "../components/SurahList";
 import { fetchSurahs } from "../services/quranApi";
 import { Surah } from "../types";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { useLastRead } from "../hooks/useLastRead";
 
 export default function HomePage() {
   const [featuredSurahs, setFeaturedSurahs] = useState<Surah[]>([]);

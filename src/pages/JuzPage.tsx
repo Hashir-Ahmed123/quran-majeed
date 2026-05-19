@@ -103,6 +103,7 @@ export default function JuzPage() {
                     <VerseRow
                       key={a.number}
                       surahNumber={g.surah.number}
+                      surahName={g.surah.englishName}
                       verse={{
                         number: a.numberInSurah,
                         text: a.text,

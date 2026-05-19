@@ -136,6 +136,7 @@ export default function SurahPage() {
                   <VerseRow 
                     verse={verse}
                     surahNumber={surah.number}
+                    surahName={surah.englishName}
                   />
                 </div>
               ))}
