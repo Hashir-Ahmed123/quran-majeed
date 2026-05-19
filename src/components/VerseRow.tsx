@@ -30,6 +30,11 @@ export function VerseRow({ verse, surahNumber, surahName }: VerseRowProps) {
         translation: verse.translation.text,
         timestamp: new Date().toISOString(),
       });
+      saveLastRead({
+        surahNumber,
+        surahName: surahName ?? `Surah ${surahNumber}`,
+        verseNumber: verse.number,
+      });
     }
   };
 
