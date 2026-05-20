@@ -94,7 +94,7 @@ export function VerseRow({ verse, surahNumber, surahName }: VerseRowProps) {
       </div>
 
       {showTafsir && (
-        <TafsirPanel surahNumber={surahNumber} ayahNumber={verse.number} />
+        <TafsirPanel surahNumber={surahNumber} ayahNumber={localAyah} />
       )}
     </div>
   );
