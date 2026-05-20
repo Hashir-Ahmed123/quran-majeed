@@ -15,17 +15,20 @@ interface VerseRowProps {
 export function VerseRow({ verse, surahNumber, surahName }: VerseRowProps) {
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
   const { saveLastRead } = useLastRead();
-  const isVerseBookmarked = isBookmarked(surahNumber, verse.number);
+  // Use the within-surah verse number for display, bookmarks, and tafsir lookup.
+  // (verse.number from alquran.cloud is the GLOBAL ayah number 1-6236.)
+  const localAyah = verse.numberInSurah ?? verse.number;
+  const isVerseBookmarked = isBookmarked(surahNumber, localAyah);
   const [isHovered, setIsHovered] = useState(false);
   const [showTafsir, setShowTafsir] = useState(false);
 
   const toggleBookmark = () => {
     if (isVerseBookmarked) {
-      removeBookmark(surahNumber, verse.number);
+      removeBookmark(surahNumber, localAyah);
     } else {
       addBookmark({
         surahNumber,
-        verseNumber: verse.number,
+        verseNumber: localAyah,
         text: verse.text,
         translation: verse.translation.text,
         timestamp: new Date().toISOString(),
@@ -33,7 +36,7 @@ export function VerseRow({ verse, surahNumber, surahName }: VerseRowProps) {
       saveLastRead({
         surahNumber,
         surahName: surahName ?? `Surah ${surahNumber}`,
-        verseNumber: verse.number,
+        verseNumber: localAyah,
       });
     }
   };
@@ -43,7 +46,7 @@ export function VerseRow({ verse, surahNumber, surahName }: VerseRowProps) {
     saveLastRead({
       surahNumber,
       surahName: surahName ?? `Surah ${surahNumber}`,
-      verseNumber: verse.number,
+      verseNumber: localAyah,
     });
   };
 
@@ -55,7 +58,7 @@ export function VerseRow({ verse, surahNumber, surahName }: VerseRowProps) {
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-shrink-0 bg-accent/10 h-8 w-8 flex items-center justify-center rounded-full mr-3">
-          <span className="text-sm font-medium text-accent">{verse.number}</span>
+          <span className="text-sm font-medium text-accent">{localAyah}</span>
         </div>
 
         <div className={`flex space-x-2 ${isHovered ? "opacity-100" : "opacity-0"} transition-opacity`}>
@@ -91,7 +94,7 @@ export function VerseRow({ verse, surahNumber, surahName }: VerseRowProps) {
       </div>
 
       {showTafsir && (
-        <TafsirPanel surahNumber={surahNumber} ayahNumber={verse.number} />
+        <TafsirPanel surahNumber={surahNumber} ayahNumber={localAyah} />
       )}
     </div>
   );
