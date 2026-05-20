@@ -58,7 +58,7 @@ export function VerseRow({ verse, surahNumber, surahName }: VerseRowProps) {
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-shrink-0 bg-accent/10 h-8 w-8 flex items-center justify-center rounded-full mr-3">
-          <span className="text-sm font-medium text-accent">{verse.number}</span>
+          <span className="text-sm font-medium text-accent">{localAyah}</span>
         </div>
 
         <div className={`flex space-x-2 ${isHovered ? "opacity-100" : "opacity-0"} transition-opacity`}>
