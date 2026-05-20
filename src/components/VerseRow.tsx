@@ -15,17 +15,20 @@ interface VerseRowProps {
 export function VerseRow({ verse, surahNumber, surahName }: VerseRowProps) {
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
   const { saveLastRead } = useLastRead();
-  const isVerseBookmarked = isBookmarked(surahNumber, verse.number);
+  // Use the within-surah verse number for display, bookmarks, and tafsir lookup.
+  // (verse.number from alquran.cloud is the GLOBAL ayah number 1-6236.)
+  const localAyah = verse.numberInSurah ?? verse.number;
+  const isVerseBookmarked = isBookmarked(surahNumber, localAyah);
   const [isHovered, setIsHovered] = useState(false);
   const [showTafsir, setShowTafsir] = useState(false);
 
   const toggleBookmark = () => {
     if (isVerseBookmarked) {
-      removeBookmark(surahNumber, verse.number);
+      removeBookmark(surahNumber, localAyah);
     } else {
       addBookmark({
         surahNumber,
-        verseNumber: verse.number,
+        verseNumber: localAyah,
         text: verse.text,
         translation: verse.translation.text,
         timestamp: new Date().toISOString(),
@@ -33,7 +36,7 @@ export function VerseRow({ verse, surahNumber, surahName }: VerseRowProps) {
       saveLastRead({
         surahNumber,
         surahName: surahName ?? `Surah ${surahNumber}`,
-        verseNumber: verse.number,
+        verseNumber: localAyah,
       });
     }
   };
@@ -43,7 +46,7 @@ export function VerseRow({ verse, surahNumber, surahName }: VerseRowProps) {
     saveLastRead({
       surahNumber,
       surahName: surahName ?? `Surah ${surahNumber}`,
-      verseNumber: verse.number,
+      verseNumber: localAyah,
     });
   };
 
