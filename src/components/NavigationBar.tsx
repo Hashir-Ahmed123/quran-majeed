@@ -18,16 +18,16 @@ export function NavigationBar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md transition-all">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
+        <div className="flex h-full items-center gap-2">
           <Link 
             to="/" 
-            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+            className="flex h-full items-center gap-2 transition-opacity hover:opacity-80"
           >
-            <span className="font-serif text-2xl font-medium text-primary">Quran</span>
+            <span className="font-serif text-2xl font-medium text-primary leading-none">Quran</span>
           </Link>
         </div>
         
-        <nav className="hidden md:flex items-center space-x-1">
+        <nav className="hidden md:flex h-full items-center space-x-1">
           {links.map((link) => {
             const isActive = location.pathname === link.path;
             const LinkIcon = link.icon;
@@ -51,7 +51,7 @@ export function NavigationBar() {
           })}
         </nav>
         
-        <div className="flex items-center gap-4">
+        <div className="flex h-full items-center gap-4">
           {!isMobile && <ThemeToggle />}
         </div>
       </div>
