@@ -51,7 +51,7 @@ export function NavigationBar() {
           })}
         </nav>
         
-        <div className="flex items-center gap-4">
+        <div className="flex h-full items-center gap-4">
           {!isMobile && <ThemeToggle />}
         </div>
       </div>
